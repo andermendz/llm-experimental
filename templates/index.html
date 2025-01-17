@@ -303,11 +303,9 @@
                 
                 contentDiv.appendChild(span);
                 
-                if (contentDiv.childNodes.length % 5 === 0) {
-                    contentDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                }
-                
-                await new Promise(resolve => setTimeout(resolve, 2));
+              
+            
+                await new Promise(resolve => setTimeout(resolve, 0));
             }
             
             isProcessing = false;
