@@ -3,38 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Creative Writing Assistant</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>AI Chat Stream</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #response {
+            white-space: pre-wrap;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-top: 20px;
+            min-height: 100px;
+            border-radius: 5px;
+            line-height: 1.5;
+        }
+        #messageForm {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        #message {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background-color: #000;
+            animation: blink 1s infinite;
+            margin-left: 2px;
+            vertical-align: middle;
+        }
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Creative Writing Assistant 📝</h1>
-        <p class="description">Unleash your creativity! Get inspired with unique story ideas, prompts, and plot twists.</p>
+    <h1>AI Chat Stream</h1>
+    <form id="messageForm">
+        <input type="text" id="message" name="message" placeholder="Type your message..." required>
+        <button type="submit">Send</button>
+    </form>
+    <div id="response"></div>
+    <div id="cursor" class="cursor" style="display: none;"></div>
 
-        <form id="prompt-form">
-            <div class="input-area">
-                <textarea 
-                    id="user-input" 
-                    placeholder="Enter a genre, tone, or initial plot point..."
-                    required
-                ></textarea>
-                <button type="submit" id="submit-button">Generate Prompt</button>
-            </div>
-        </form>
+    <script>
+        const socket = io();
+        let isProcessing = false;
+        let responseContainer = document.getElementById('response');
+        let cursor = document.getElementById('cursor');
+        let currentResponse = '';
 
-        <div id="loading" class="loading">
-            Generating creative prompt...
-        </div>
+        socket.on('connect', () => {
+            console.log('Connected to server');
+        });
 
-        <div id="output-area" class="output-area"></div>
+        socket.on('disconnect', () => {
+            console.log('Disconnected from server');
+            cursor.style.display = 'none';
+        });
 
-        <div class="examples">
-            <button class="example-button">A story about a lost civilization discovering technology.</button>
-            <button class="example-button">Compose a poem about the changing seasons.</button>
-            <button class="example-button">A suspense thriller set in an abandoned mansion.</button>
-        </div>
-    </div>
+        socket.on('stream_response', function(data) {
+            const { data: chunk } = data;
+            currentResponse += chunk;
+            responseContainer.textContent = currentResponse;
+            cursor.style.display = 'inline-block';
+            responseContainer.appendChild(cursor);
+            window.scrollTo(0, document.body.scrollHeight);
+        });
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+        document.getElementById('messageForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            if (isProcessing) return;
+            isProcessing = true;
+
+            const message = document.getElementById('message').value;
+            currentResponse = '';
+            responseContainer.textContent = '';
+            cursor.style.display = 'inline-block';
+            responseContainer.appendChild(cursor);
+            
+            try {
+                const response = await fetch('/stream', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `message=${encodeURIComponent(message)}`
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                document.getElementById('message').value = '';
+            } catch (error) {
+                console.error('Error:', error);
+                responseContainer.textContent = 'Error: Failed to get response';
+                cursor.style.display = 'none';
+            } finally {
+                isProcessing = false;
+            }
+        });
+    </script>
 </body>
 </html>
