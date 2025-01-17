@@ -3,108 +3,352 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Chat Stream</title>
+    <title>AI Chat</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-color: #fafafa;
+            --text-color: #1a1a1a;
+            --primary-color: #3b82f6;
+            --secondary-color: #f3f4f6;
+            --border-color: #e5e7eb;
+            --hover-color: #2563eb;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        #response {
-            white-space: pre-wrap;
-            border: 1px solid #ddd;
-            padding: 15px;
-            margin-top: 20px;
-            min-height: 100px;
-            border-radius: 5px;
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             line-height: 1.5;
+            height: 100vh;
+            overflow: hidden;
         }
+
+        .chat-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            height: calc(100vh - 4rem);
+            background: white;
+            border-radius: 1rem;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .chat-header {
+            padding: 1.25rem;
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+
+        .status-indicator.offline {
+            background: #ef4444;
+        }
+
+        .chat-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        #response {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: messageIn 0.3s ease forwards;
+        }
+
+        @keyframes messageIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            padding: 0.875rem 1.25rem;
+            border-radius: 1rem;
+            max-width: 80%;
+            line-height: 1.6;
+            transition: var(--transition);
+            white-space: pre-wrap;  
+            word-break: break-word; 
+        }
+
+        .user .message-content {
+            background: var(--primary-color);
+            color: white;
+            border-bottom-right-radius: 0.25rem;
+        }
+
+        .ai .message-content {
+            background: var(--secondary-color);
+            border-bottom-left-radius: 0.25rem;
+        }
+
+        .input-container {
+            padding: 1.25rem;
+            background: white;
+            border-top: 1px solid var(--border-color);
+        }
+
         #messageForm {
             display: flex;
-            gap: 10px;
-            margin-top: 20px;
+            gap: 0.75rem;
         }
+
         #message {
-            flex-grow: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            flex: 1;
+            padding: 0.875rem 1.25rem;
+            font-size: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 0.75rem;
+            background: white;
+            transition: var(--transition);
+            font-family: inherit;
+            height: 40px;
         }
+
+        #message:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
         button {
-            padding: 10px 20px;
-            background-color: #007bff;
+            padding: 0 1.5rem;
+            font-size: 1rem;
+            font-weight: 500;
             color: white;
+            background-color: var(--primary-color);
             border: none;
-            border-radius: 5px;
+            border-radius: 0.75rem;
             cursor: pointer;
+            transition: var(--transition);
+            min-width: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+
         button:hover {
-            background-color: #0056b3;
+            background-color: var(--hover-color);
+            transform: translateY(-1px);
         }
-        .cursor {
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .character {
             display: inline-block;
-            width: 8px;
-            height: 16px;
-            background-color: #000;
-            animation: blink 1s infinite;
-            margin-left: 2px;
-            vertical-align: middle;
+            opacity: 0;
+            transform: translateY(5px);
+            animation: charIn 0.15s ease forwards;
+            white-space: pre;  
         }
-        @keyframes blink {
-            0% { opacity: 1; }
-            50% { opacity: 0; }
-            100% { opacity: 1; }
+
+        @keyframes charIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Custom Scrollbar */
+        #response::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #response::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #response::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        #response::-webkit-scrollbar-thumb:hover {
+            background: #d1d5db;
+        }
+
+        @media (max-width: 1024px) {
+            .chat-container {
+                margin: 1rem;
+                height: calc(100vh - 2rem);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .chat-container {
+                margin: 0;
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            .message-content {
+                max-width: 90%;
+            }
+
+            .input-container {
+                padding: 1rem;
+            }
+
+            button {
+                padding: 0 1rem;
+                min-width: 80px;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>AI Chat Stream</h1>
-    <form id="messageForm">
-        <input type="text" id="message" name="message" placeholder="Type your message..." required>
-        <button type="submit">Send</button>
-    </form>
-    <div id="response"></div>
-    <div id="cursor" class="cursor" style="display: none;"></div>
+    <div class="chat-container">
+        <header class="chat-header">
+            <div class="status-indicator"></div>
+            <div class="chat-title">AI Assistant</div>
+        </header>
+
+        <div id="response"></div>
+
+        <div class="input-container">
+            <form id="messageForm">
+                <input type="text" id="message" placeholder="Type your message..." autocomplete="off" required>
+                <button type="submit">Send</button>
+            </form>
+        </div>
+    </div>
 
     <script>
         const socket = io();
+        let textBuffer = '';
         let isProcessing = false;
         let responseContainer = document.getElementById('response');
-        let cursor = document.getElementById('cursor');
-        let currentResponse = '';
+        let currentMessageElement = null;
+        const statusIndicator = document.querySelector('.status-indicator');
+
+        function createMessageElement(isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            messageDiv.appendChild(contentDiv);
+
+            return messageDiv;
+        }
+
+        async function processBuffer() {
+            if (!textBuffer || isProcessing) return;
+            isProcessing = true;
+
+            const text = textBuffer;
+            textBuffer = '';
+
+            if (!currentMessageElement) {
+                currentMessageElement = createMessageElement(false);
+                responseContainer.appendChild(currentMessageElement);
+            }
+
+            const contentDiv = currentMessageElement.querySelector('.message-content');
+            
+            // Split text into characters while preserving spaces
+            const chars = Array.from(text);
+            for (const char of chars) {
+                const span = document.createElement('span');
+                span.className = 'character';
+                
+                // Use non-breaking space for visual spacing
+                if (char === ' ') {
+                    span.innerHTML = '&nbsp;';
+                } else {
+                    span.textContent = char;
+                }
+                
+                contentDiv.appendChild(span);
+                
+                if (contentDiv.childNodes.length % 5 === 0) {
+                    contentDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 2));
+            }
+            
+            isProcessing = false;
+            if (textBuffer) {
+                processBuffer();
+            }
+        }
 
         socket.on('connect', () => {
             console.log('Connected to server');
+            statusIndicator.classList.remove('offline');
         });
 
         socket.on('disconnect', () => {
             console.log('Disconnected from server');
-            cursor.style.display = 'none';
+            statusIndicator.classList.add('offline');
         });
 
         socket.on('stream_response', function(data) {
             const { data: chunk } = data;
-            currentResponse += chunk;
-            responseContainer.textContent = currentResponse;
-            cursor.style.display = 'inline-block';
-            responseContainer.appendChild(cursor);
-            window.scrollTo(0, document.body.scrollHeight);
+            textBuffer += chunk;
+            processBuffer();
         });
 
         document.getElementById('messageForm').addEventListener('submit', async function(event) {
             event.preventDefault();
             
             if (isProcessing) return;
-            isProcessing = true;
 
-            const message = document.getElementById('message').value;
-            currentResponse = '';
-            responseContainer.textContent = '';
-            cursor.style.display = 'inline-block';
-            responseContainer.appendChild(cursor);
+            const messageInput = document.getElementById('message');
+            const message = messageInput.value;
+
+            // Add user message
+            const userMessage = createMessageElement(true);
+            userMessage.querySelector('.message-content').textContent = message;
+            responseContainer.appendChild(userMessage);
+            userMessage.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+            // Create new AI message container
+            currentMessageElement = createMessageElement(false);
+            responseContainer.appendChild(currentMessageElement);
             
             try {
                 const response = await fetch('/stream', {
@@ -119,14 +363,19 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
-                document.getElementById('message').value = '';
+                messageInput.value = '';
+                messageInput.focus();
             } catch (error) {
                 console.error('Error:', error);
-                responseContainer.textContent = 'Error: Failed to get response';
-                cursor.style.display = 'none';
-            } finally {
-                isProcessing = false;
+                currentMessageElement.querySelector('.message-content').textContent = 'Error: Failed to get response';
             }
+        });
+
+        // Auto-resize input field
+        const messageInput = document.getElementById('message');
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 150) + 'px';
         });
     </script>
 </body>

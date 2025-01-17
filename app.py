@@ -29,10 +29,10 @@ def stream_response():
         user_message = request.form.get('message', 'Hello!')
         print(f"Received message: {user_message}")
         
-        # Create the chat completion with streaming
         response = ""
+        
         stream = client.chat.completions.create(
-            model="",  # Changed to a more reliable model
+            model="gemini-1.5-pro",  # Switch to a model that doesn't need API key
             messages=[
                 {"role": "system", "content": "You are a helpful AI assistant."},
                 {"role": "user", "content": user_message}
@@ -46,10 +46,10 @@ def stream_response():
             try:
                 partial_response = chunk.choices[0].delta.content or ""
                 if partial_response:
+                    # Just send each chunk directly, let client handle animation
                     response += partial_response
-                    print(f"Emitting chunk: {partial_response}")
                     socketio.emit('stream_response', {'data': partial_response})
-                    socketio.sleep(0)  # Allow other events to be processed
+                    # No sleep needed, client will handle timing
             except Exception as chunk_error:
                 print(f"Error processing chunk: {chunk_error}")
                 traceback.print_exc()
