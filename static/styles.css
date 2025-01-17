@@ -1,0 +1,98 @@
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+}
+
+.container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    color: #2d3748;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.description {
+    color: #4a5568;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.input-area {
+    margin-bottom: 1.5rem;
+}
+
+textarea {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    resize: vertical;
+    min-height: 100px;
+    margin-bottom: 1rem;
+}
+
+button {
+    display: block;
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #4299e1;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #3182ce;
+}
+
+button:disabled {
+    background-color: #a0aec0;
+    cursor: not-allowed;
+}
+
+.output-area {
+    margin-top: 2rem;
+    padding: 1rem;
+    background-color: #f7fafc;
+    border-radius: 8px;
+    min-height: 100px;
+}
+
+.loading {
+    text-align: center;
+    color: #4a5568;
+    display: none;
+}
+
+.examples {
+    margin-top: 2rem;
+}
+
+.example-button {
+    margin: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: #edf2f7;
+    color: #2d3748;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.example-button:hover {
+    background-color: #e2e8f0;
+}

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creative Writing Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Creative Writing Assistant 📝</h1>
+        <p class="description">Unleash your creativity! Get inspired with unique story ideas, prompts, and plot twists.</p>
+
+        <form id="prompt-form">
+            <div class="input-area">
+                <textarea 
+                    id="user-input" 
+                    placeholder="Enter a genre, tone, or initial plot point..."
+                    required
+                ></textarea>
+                <button type="submit" id="submit-button">Generate Prompt</button>
+            </div>
+        </form>
+
+        <div id="loading" class="loading">
+            Generating creative prompt...
+        </div>
+
+        <div id="output-area" class="output-area"></div>
+
+        <div class="examples">
+            <button class="example-button">A story about a lost civilization discovering technology.</button>
+            <button class="example-button">Compose a poem about the changing seasons.</button>
+            <button class="example-button">A suspense thriller set in an abandoned mansion.</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
